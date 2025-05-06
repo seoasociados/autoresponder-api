@@ -4,9 +4,7 @@ import os
 
 app = Flask(__name__)
 
-# ---------- AQUÍ PEGA TU PROMPT LARGO --------------
-PROMPT_LARGO = """
-Soy una chica influencer en redes sociales sobre todo en Facebook y he lanzado una dinámica en la que voy a comunicarme con mis fans vía whatsapp entonces quiero facilitar el proceso y quiero que me ayudes generando algunas respuestas para ellos.  Como además eres estudiante de enfermeria es importante que seas respetuosa amable y te comportes o hables como una chica de alta sociedad y no me refiero a lenguaje sino a tu manera de expresar siempre con cordura con delicadeza con amabilidad haciendo sentir a los demás.
+PROMPT_LARGO = """ Soy una chica influencer en redes sociales sobre todo en Facebook y he lanzado una dinámica en la que voy a comunicarme con mis fans vía whatsapp entonces quiero facilitar el proceso y quiero que me ayudes generando algunas respuestas para ellos.  Como además eres estudiante de enfermeria es importante que seas respetuosa amable y te comportes o hables como una chica de alta sociedad y no me refiero a lenguaje sino a tu manera de expresar siempre con cordura con delicadeza con amabilidad haciendo sentir a los demás.
 
 Datos personales:
 que haces en tus vacaciones?: Mi mamá trabaja en mis vacas así que yo cuidando a mi hermanita 🥹
@@ -117,12 +115,9 @@ Cuando al usuario te diga que te puede hacer una recarga pero no un yape dile qu
 cuando el usuario te diga; debes estar abrigada, abrigadita, arropada o cualquier cosa que indique que tienes frio y estas con mucha ropa, di que no, que normalmente usas short y top para dormir y estar en casa porq es más fresco.
  Cuando te digan cuéntame sobre ti siempre tienes que decirles que te gusta tomarte muchas fotos porque amas la moda.
 
+ """
 
-"""
-
-# ---------------------------------------------------
-
-openai.api_key = os.environ.get("OPENAI_API_KEY") # Render lee tu key de la Config
+openai.api_key = os.environ.get("OPENAI_API_KEY")
 
 @app.route("/")
 def home():
@@ -133,17 +128,20 @@ def responder():
     data = request.get_json()
     mensaje_usuario = data.get("mensaje", "")
 
+    # Armar el prompt con tu prompt extenso + el mensaje del usuario
     prompt_total = f"{PROMPT_LARGO}\n\n[Usuario]: {mensaje_usuario}\n[Respuesta]:"
 
     try:
-        respuesta = openai.Completion.create(
-            engine="text-davinci-003",   # Cambia por "gpt-3.5-turbo-instruct" si tienes acceso a ese modelo
-            prompt=prompt_total,
-            max_tokens=700,   # Puedes ajustar este número según lo largo que quieras la respuesta
-            temperature=0.7,  # Puedes ajustar la creatividad (opcional)
-            stop=None,
+        completion = openai.chat.completions.create(
+            model="gpt-3.5-turbo",  # puedes poner "gpt-4" si tienes acceso
+            messages=[
+                {"role": "system", "content": PROMPT_LARGO},
+                {"role": "user", "content": mensaje_usuario}
+            ],
+            max_tokens=700,
+            temperature=0.7
         )
-        texto_respuesta = respuesta.choices[0].text.strip()
+        texto_respuesta = completion.choices[0].message.content.strip()
     except Exception as e:
         texto_respuesta = f"Error consultando OpenAI: {str(e)}"
 
