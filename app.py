@@ -140,7 +140,7 @@ def responder():
                 {"role": "system", "content": PROMPT_LARGO},
                 {"role": "user", "content": mensaje_usuario}
             ],
-            max_tokens=700,
+            max_tokens=30,
             temperature=0.7
         )
         texto_respuesta = completion.choices[0].message.content.strip()
