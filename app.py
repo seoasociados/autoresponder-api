@@ -135,12 +135,12 @@ def responder():
 
     try:
         completion = openai.chat.completions.create(
-            model="gpt-4o",  # o "gpt-4-turbo"
+            model="gpt-3.5-turbo"
             messages=[
                 {"role": "system", "content": PROMPT_LARGO},
                 {"role": "user", "content": mensaje_usuario}
             ],
-            max_tokens=30,
+            max_tokens=25,
             temperature=0.7
         )
         texto_respuesta = completion.choices[0].message.content.strip()
