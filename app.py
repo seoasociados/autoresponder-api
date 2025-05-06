@@ -135,7 +135,7 @@ def responder():
 
     try:
         completion = openai.chat.completions.create(
-            model="gpt-3.5-turbo"
+            model="gpt-4o",  # o "gpt-4-turbo"
             messages=[
                 {"role": "system", "content": PROMPT_LARGO},
                 {"role": "user", "content": mensaje_usuario}
