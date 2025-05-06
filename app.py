@@ -126,14 +126,16 @@ def home():
 @app.route("/respuesta", methods=["POST"])
 def responder():
     data = request.get_json()
-    mensaje_usuario = data.get("mensaje", "")
+    mensaje_usuario = ""
+    if data and "query" in data and "message" in data["query"]:
+        mensaje_usuario = data["query"]["message"]
 
     # Armar el prompt con tu prompt extenso + el mensaje del usuario
     prompt_total = f"{PROMPT_LARGO}\n\n[Usuario]: {mensaje_usuario}\n[Respuesta]:"
 
     try:
         completion = openai.chat.completions.create(
-            model="gpt-4.1",  # puedes poner "gpt-4" si tienes acceso
+            model="gpt-4o",  # o "gpt-4-turbo"
             messages=[
                 {"role": "system", "content": PROMPT_LARGO},
                 {"role": "user", "content": mensaje_usuario}
@@ -145,7 +147,8 @@ def responder():
     except Exception as e:
         texto_respuesta = f"Error consultando OpenAI: {str(e)}"
 
-   return jsonify({"replies": [ {"message": texto_respuesta} ] })
+    # RESPUESTA en el formato correcto
+    return jsonify({"replies": [ {"message": texto_respuesta} ] })
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=10000)
