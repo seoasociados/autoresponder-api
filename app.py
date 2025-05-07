@@ -342,7 +342,7 @@ No expliques, solo responde directo como si chatearas.
 
     try:
         completion = openai.chat.completions.create(
-            model="gpt-4-turbo"
+            model="gpt-4-turbo",
             messages=[
                 {"role": "system", "content": prompt},
                 {"role": "user", "content": mensaje_usuario}
