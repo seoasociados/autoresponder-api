@@ -378,13 +378,10 @@ No expliques, solo responde directo como si chatearas.
             ],
             max_tokens=40,
             temperature=0.8
-        )
-        texto_respuesta = completion.choices[0].message.content.strip()
-        texto_respuesta = hacer_mala_ortografia(texto_respuesta)
-         texto_respuesta = limitar_palabras(texto_respuesta, 12)
-    except Exception as e:
-        texto_respuesta = f"Error consultando OpenAI: {str(e)}"
-    return jsonify({"replies": [{"message": texto_respuesta}]})
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=10000)
+       )
+    texto_respuesta = completion.choices[0].message.content.strip()
+    texto_respuesta = hacer_mala_ortografia(texto_respuesta)
+    texto_respuesta = limitar_palabras(texto_respuesta, 12)
+except Exception as e:
+    texto_respuesta = f"Error consultando OpenAI: {str(e)}"
+return jsonify({"replies": [{"message": texto_respuesta}]})
