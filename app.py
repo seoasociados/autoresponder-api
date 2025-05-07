@@ -354,7 +354,7 @@ No expliques, solo responde directo como si chatearas.
         )
         texto_respuesta = completion.choices[0].message.content.strip()
         texto_respuesta = hacer_mala_ortografia(texto_respuesta)
-        texto_respuesta = limitar_palabras(texto_respuesta, 15)
+        texto_respuesta = limitar_palabras(texto_respuesta, 20)
         texto_respuesta = forzar_minuscula(texto_respuesta)
     except Exception as e:
         texto_respuesta = f"Error consultando OpenAI: {str(e)}"
