@@ -74,6 +74,7 @@ def quitar_tildes(texto):
 def hacer_mala_ortografia(texto):
     # Quitar signo de apertura (¿) y tildes
     texto = texto.replace("¿", "")
+    texto = texto.replace("¿", "¡")
     texto = quitar_tildes(texto)
     # Cambios específicos
     texto = re.sub(r'\bque\b', 'q', texto, flags=re.IGNORECASE)
