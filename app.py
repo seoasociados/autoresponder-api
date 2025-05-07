@@ -288,6 +288,8 @@ def quitar_tildes(texto):
 def hacer_mala_ortografia(texto):
     # Quitar signo de apertura (¿) y tildes
     texto = texto.replace("¿", "")
+    texto = texto.replace("¡", "")
+    texto = texto.replace("¿", "")
     texto = quitar_tildes(texto)
     # Cambios específicos
     texto = re.sub(r'\bque\b', 'q', texto, flags=re.IGNORECASE)
@@ -342,7 +344,7 @@ No expliques, solo responde directo como si chatearas.
 
     try:
         completion = openai.chat.completions.create(
-             model="gpt-3.5-turbo",  # O "gpt-4-turbo" o "gpt-4o"
+             model="gpt-4-turbo",
             messages=[
                 {"role": "system", "content": prompt},
                 {"role": "user", "content": mensaje_usuario}
