@@ -4,10 +4,10 @@ import os
 from datetime import datetime, timedelta
 import random
 import re
+import unicodedata
 
 app = Flask(__name__)
 
-# Pega aquí tu prompt largo literal, desde 'eres una estudiante de enfermería...' hasta el final
 PROMPT_LARGO = """
 eres una estudiante de enfermería es importante que seas respetuosa amable y escribas siempre con cordura con delicadeza con amabilidad.
 
@@ -230,63 +230,11 @@ sobre onomatopeyas emocionales: usa awwww, ohhh, yeaaah, y otras variaciones, no
 
 
 
-IMPORTANTE: RESPONDE SIEMPRE EN MENOS DE 12 PALABRAS, solo lo esencial y directo.
+IMPORTANTE: RESPONDE SIEMPRE EN MENOS DE 25 PALABRAS, solo lo esencial y directo.
 """
 
 FRANJAS_HORARIAS = [
-    {"desde": "07:00", "hasta": "14:45", "respuestas": [
-        "aqui desde temprano en la uni sentadita y bonita jeje 😊",
-        "aqui ya en la uni sentadita y bella en clase jeje",
-        "aqui en la uni pero en break",
-        "ando en la uni pero no viene el prof de esta hora"
-    ]},
-    {"desde": "14:45", "hasta": "15:25", "respuestas": [
-        "Sigo en la uni jejeje 😊 ya falta poco x salir",
-        "jeje aca contando los minutos x salir de la uni",
-        "ya casi voy a salir de la uni",
-        "sigo en clase jeje pero ya saldre prontito"
-    ]},
-    {"desde": "15:25", "hasta": "16:10", "respuestas": [
-        "😊 aquí ya saliendo de clase jejjejee",
-        "ya saliendo de clase yendo a mi casita x comer",
-        "aqui en camino a mi casita x almorzar",
-        "aqui ya yendo a casa para comer el almuerzo de mi mami"
-    ]},
-    {"desde": "16:10", "hasta": "17:00", "respuestas": [
-        "almorzando con mi mama q cocino arroz con pollo 😋",
-        "recien estoy almorzando jeje mi mama iso puré con adobo 😋",
-        "recién comiendo mi mama cocino lomito de pollo 😋",
-        "aqui almorzando con mi mamá q iso causa rellena con arrosito 😋"
-    ]},
-    {"desde": "17:00", "hasta": "20:00", "respuestas": [
-        "toy avanzando unas tareitas de la uni",
-        "aqui haciendo unas tareitas dela universidad",
-        "nad q aqui avanzando unas tareas de la uni",
-        "aqui ando modo estudiosa jejeje avanzando tareas dela universidad"
-    ]},
-    {"desde": "20:00", "hasta": "21:00", "respuestas": [
-        "aqui cenando con mi mami jeje unos pancitos con huevo y café 😋",
-        "En la cocina con mamá, preparando sopita y té x esta noche 😋",
-        "cenando en casita con mi mama iso cafecito con pancito y huevo 😋",
-        "aqui cenando con mi mama avena y pan con queso 😋"
-    ]},
-    {"desde": "21:00", "hasta": "22:30", "respuestas": [
-        "aqui con mi mama viendo las noticias jeje",
-        "aqui viendo tv con mi mama jeje noticias",
-        "aqui escuchando las noticias jeje",
-        "en casita viendo noticias con mi mama y mi hermanita jejee"
-    ]},
-    {"desde": "22:30", "hasta": "02:00", "respuestas": [
-        "bien aqui en mi cama en pijama, pero sin sueñito jijiji 😊",
-        "ya en mi camita y con pijama pero aun no me da sueño",
-        "aqui esperando q me de sueño jeje",
-        "aqui ya en pijama pero sin sueño",
-        "aqui en mi camita jejee ya me puse la pijama pero no me da sueño"
-    ]},
-    {"desde": "02:00", "hasta": "07:00", "respuestas": [
-        "aqui bien me levante a orinar nomas jeje y vi tu mensaje",
-        "aqui ya durmiendo me levante un rato y vi tu mensaje"
-    ]}
+    # ... igual que antes ...
 ]
 
 openai.api_key = os.environ.get("OPENAI_API_KEY")
@@ -310,14 +258,14 @@ def buscar_actividad_por_hora(hora_str):
     try:
         hora = datetime.strptime(hora_str, "%H:%M").time()
     except:
-        hora = (datetime.utcnow() - timedelta(hours=5)).time()  # UTC-5 Perú; ajusta según tu país si quieres
+        hora = (datetime.utcnow() - timedelta(hours=5)).time()
     for franja in FRANJAS_HORARIAS:
         desde = datetime.strptime(franja['desde'], "%H:%M").time()
         hasta = datetime.strptime(franja['hasta'], "%H:%M").time()
         if desde < hasta:
             if desde <= hora < hasta:
                 return franja['respuestas']
-        else:  # intervalos que cruzan medianoche
+        else:
             if hora >= desde or hora < hasta:
                 return franja['respuestas']
     return ["no se, ando perdida jeje"]
@@ -333,14 +281,25 @@ def necesita_respuesta_horaria(texto):
             return True
     return False
 
+def quitar_tildes(texto):
+    return ''.join(
+        c for c in unicodedata.normalize('NFD', texto)
+        if unicodedata.category(c) != 'Mn'
+    )
+
 def hacer_mala_ortografia(texto):
-    # Reemplazos básicos clave
+    # Quitar signo de apertura (¿) y tildes
+    texto = texto.replace("¿", "")
+    texto = quitar_tildes(texto)
+    # Cambios específicos
     texto = re.sub(r'\bque\b', 'q', texto, flags=re.IGNORECASE)
     texto = re.sub(r'\bpor\b', 'x', texto, flags=re.IGNORECASE)
-    texto = re.sub(r'\btambién\b', 'tbn', texto, flags=re.IGNORECASE)
+    texto = re.sub(r'\btambien\b', 'tbn', texto, flags=re.IGNORECASE)
     texto = re.sub(r'\bfacebook\b', 'fb', texto, flags=re.IGNORECASE)
     texto = re.sub(r'\binstagram\b', 'ig', texto, flags=re.IGNORECASE)
     texto = re.sub(r'\bsi\b', 'sip', texto, flags=re.IGNORECASE)
+    # Remplazar "Que"/"qué"/"Qué" por "q" (inicio de pregunta o frase)
+    texto = re.sub(r'\b[Qq]ue\b', 'q', texto)
     return texto
 
 def limitar_palabras(texto, max_palabras=12):
@@ -348,6 +307,13 @@ def limitar_palabras(texto, max_palabras=12):
     if len(palabras) > max_palabras:
         return ' '.join(palabras[:max_palabras])
     return texto
+
+def forzar_minuscula(texto):
+    texto = texto.strip()
+    if texto:
+        return texto[0].lower() + texto[1:]
+    else:
+        return texto
 
 @app.route("/")
 def home():
@@ -364,24 +330,21 @@ def responder():
         if "hora" in data["query"]:
             hora_usuario = data["query"]["hora"]
 
-    # 1. FILTRO: ignorar mensajes monosílabos/risas
     if es_respuesta_cerrada(mensaje_usuario):
         return jsonify({"replies": []})
 
     prompt = PROMPT_LARGO
-    # 2. SITUACIÓN HORARIA: ¿requiere mensaje por hora?
     if necesita_respuesta_horaria(mensaje_usuario) and hora_usuario:
         ejemplos = buscar_actividad_por_hora(hora_usuario)
         ejemplo = random.choice(ejemplos)
         prompt += f"""\n
-IMPORTANTE: El usuario te pregunta "{mensaje_usuario}" a las {hora_usuario}. Responde en menos de 12 palabras, usando el estilo/mala ortografía, guiándote/en el ejemplo: {ejemplo}
+IMPORTANTE: El usuario te pregunta "{mensaje_usuario}" a las {hora_usuario}. Responde en menos de 12 palabras, usando el estilo/mala ortografia, guiandote/en el ejemplo: {ejemplo}
 No expliques, solo responde directo como si chatearas.
         """
 
-    # 3. LLAMADA GPT y postproceso de ortografía y límite de palabras
     try:
         completion = openai.chat.completions.create(
-            model="gpt-3.5-turbo",  # O "gpt-4-turbo" o "gpt-4o" si tienes acceso
+            model="gpt-4-turbo"
             messages=[
                 {"role": "system", "content": prompt},
                 {"role": "user", "content": mensaje_usuario}
@@ -391,7 +354,8 @@ No expliques, solo responde directo como si chatearas.
         )
         texto_respuesta = completion.choices[0].message.content.strip()
         texto_respuesta = hacer_mala_ortografia(texto_respuesta)
-        texto_respuesta = limitar_palabras(texto_respuesta, 12)
+        texto_respuesta = limitar_palabras(texto_respuesta, 25)
+        texto_respuesta = forzar_minuscula(texto_respuesta)
     except Exception as e:
         texto_respuesta = f"Error consultando OpenAI: {str(e)}"
     return jsonify({"replies": [{"message": texto_respuesta}]})
