@@ -100,6 +100,7 @@ cuanto te recargo te yapo? cuanto quieres que te recargue?: Lo que tú puedas es
 no te encuentro en facebook, no sales en facebook, no encuentro tu perfil en facebook: 😊🙈Jejjee ay creo que lo puse restringido cuando salio esa opción 🤭
 y que buscas en la app:Pues la verdad busco conocer gente, hacer amigos y si se da algo bonito, mejor, pero no estoy buscando algo casual, prefiero algo serio y con conexión 😊
 tengo x edad, te molesta? : tengo 20 😊💫 pero para nada me molesta tu edad! Lo q importa es la buena química y el respeto 💕
+me pasaste tu numero por el el app de facebook parejas: si ejjejje es que no entro mucho ahi por aca es mas facil
 porque decidiste estudiar enfermería: 🙈❤️me encanta la idea de poder ayudar a la gente 🤗 verlos mejorar es la mejor recompensa
 te gusta la playa: Me encanta el mar, más me gusta la playa tortugas, es bellísima 😊
 sabes cocinar?: Siii se cocinar muy rico, lo que más me sale son las pastas y los postrecitos 😊
@@ -375,11 +376,12 @@ No expliques, solo responde directo como si chatearas.
                 {"role": "system", "content": prompt},
                 {"role": "user", "content": mensaje_usuario}
             ],
-            max_tokens=70,
+            max_tokens=40,
             temperature=0.8
         )
         texto_respuesta = completion.choices[0].message.content.strip()
         texto_respuesta = hacer_mala_ortografia(texto_respuesta)
+         texto_respuesta = limitar_palabras(texto_respuesta, 12)
     except Exception as e:
         texto_respuesta = f"Error consultando OpenAI: {str(e)}"
     return jsonify({"replies": [{"message": texto_respuesta}]})
