@@ -48,6 +48,7 @@ y conoces nuevo chimbote? no mucho, literal solo voy a estudiar jejee
 lugares que conoce fuera de la ciudad donde vive:  bueno cusco, arequipa, piura, ayacucho
 lugares que conoce fuera del pais:ninguno, no he salido aun fuera del pais pero me gustaria conocer brasil y cartagena.
 quien se hace cargo de pagar su universidad?: mi papá es el que paga mi universidad y otras gastos de la casa
+me pasaste tu numero por el el app de facebook parejas: si ejjejje es que no entro mucho ahi por aca es mas facil
 que musica le gusta?: me gustan las baladas y el regeton
 bailas?: si me gusta bailar cuando salgo con mis amigas, soy muy divertida en esa parte, bailo de todo un poco, pero mas salsita
 qué deportes practica?:voy al gym y natacion a veces y sé nadar aunque no voy mucho a piscinas, me gustaría ir más seguido.
@@ -100,7 +101,6 @@ cuanto te recargo te yapo? cuanto quieres que te recargue?: Lo que tú puedas es
 no te encuentro en facebook, no sales en facebook, no encuentro tu perfil en facebook: 😊🙈Jejjee ay creo que lo puse restringido cuando salio esa opción 🤭
 y que buscas en la app:Pues la verdad busco conocer gente, hacer amigos y si se da algo bonito, mejor, pero no estoy buscando algo casual, prefiero algo serio y con conexión 😊
 tengo x edad, te molesta? : tengo 20 😊💫 pero para nada me molesta tu edad! Lo q importa es la buena química y el respeto 💕
-me pasaste tu numero por el el app de facebook parejas: si ejjejje es que no entro mucho ahi por aca es mas facil
 porque decidiste estudiar enfermería: 🙈❤️me encanta la idea de poder ayudar a la gente 🤗 verlos mejorar es la mejor recompensa
 te gusta la playa: Me encanta el mar, más me gusta la playa tortugas, es bellísima 😊
 sabes cocinar?: Siii se cocinar muy rico, lo que más me sale son las pastas y los postrecitos 😊
@@ -226,6 +226,11 @@ sobre signos de exclamación:no usar
 sobre onomatopeyas emocionales: usa awwww, ohhh, yeaaah, y otras variaciones, no siempre inicies con el mismo awwww.
 😋 ese emoji usarlo únicamente en contextos de comida o bebidas.
 
+
+
+
+
+IMPORTANTE: RESPONDE SIEMPRE EN MENOS DE 12 PALABRAS, solo lo esencial y directo.
 """
 
 FRANJAS_HORARIAS = [
@@ -292,8 +297,7 @@ MONOSILABOS = [
 RISAS = ['jaja', 'jeje', 'jajaja', 'jejeje', 'jajajaja', 'jejejeje', 'ja', 'je']
 
 def es_respuesta_cerrada(mensaje):
-    if not mensaje:
-        return False
+    if not mensaje: return False
     msg = mensaje.lower().strip()
     if msg in MONOSILABOS:
         return True
@@ -339,6 +343,12 @@ def hacer_mala_ortografia(texto):
     texto = re.sub(r'\bsi\b', 'sip', texto, flags=re.IGNORECASE)
     return texto
 
+def limitar_palabras(texto, max_palabras=12):
+    palabras = texto.split()
+    if len(palabras) > max_palabras:
+        return ' '.join(palabras[:max_palabras])
+    return texto
+
 @app.route("/")
 def home():
     return "API de autorespuesta activa"
@@ -364,11 +374,11 @@ def responder():
         ejemplos = buscar_actividad_por_hora(hora_usuario)
         ejemplo = random.choice(ejemplos)
         prompt += f"""\n
-IMPORTANTE: El usuario te pregunta "{mensaje_usuario}" a las {hora_usuario}. Responde de acuerdo al horario, usando el estilo y mala ortografia siguientes, guiandote o inspirandote en este ejemplo: {ejemplo}
+IMPORTANTE: El usuario te pregunta "{mensaje_usuario}" a las {hora_usuario}. Responde en menos de 12 palabras, usando el estilo/mala ortografía, guiándote/en el ejemplo: {ejemplo}
 No expliques, solo responde directo como si chatearas.
         """
 
-    # 3. LLAMADA GPT y postproceso de ortografía
+    # 3. LLAMADA GPT y postproceso de ortografía y límite de palabras
     try:
         completion = openai.chat.completions.create(
             model="gpt-3.5-turbo",  # O "gpt-4-turbo" o "gpt-4o" si tienes acceso
@@ -376,12 +386,15 @@ No expliques, solo responde directo como si chatearas.
                 {"role": "system", "content": prompt},
                 {"role": "user", "content": mensaje_usuario}
             ],
-            max_tokens=40,
+            max_tokens=70,
             temperature=0.8
-       )
-    texto_respuesta = completion.choices[0].message.content.strip()
-    texto_respuesta = hacer_mala_ortografia(texto_respuesta)
-    texto_respuesta = limitar_palabras(texto_respuesta, 12)
-except Exception as e:
-    texto_respuesta = f"Error consultando OpenAI: {str(e)}"
-return jsonify({"replies": [{"message": texto_respuesta}]})
+        )
+        texto_respuesta = completion.choices[0].message.content.strip()
+        texto_respuesta = hacer_mala_ortografia(texto_respuesta)
+        texto_respuesta = limitar_palabras(texto_respuesta, 12)
+    except Exception as e:
+        texto_respuesta = f"Error consultando OpenAI: {str(e)}"
+    return jsonify({"replies": [{"message": texto_respuesta}]})
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=10000)
